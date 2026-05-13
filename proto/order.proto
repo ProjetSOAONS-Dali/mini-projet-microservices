@@ -1,0 +1,55 @@
+syntax = "proto3";
+package order;
+
+message OrderItem {
+  string product_id   = 1;
+  string product_name = 2;
+  int32  quantity     = 3;
+  float  unit_price   = 4;
+}
+
+message Order {
+  string            id          = 1;
+  string            customer_id = 2;
+  repeated OrderItem items      = 3;
+  float             total       = 4;
+  string            status      = 5;  // PENDING, CONFIRMED, SHIPPED, DELIVERED, CANCELLED
+  string            created_at  = 6;
+}
+
+message GetOrderRequest {
+  string order_id = 1;
+}
+message GetOrderResponse {
+  Order order = 1;
+}
+
+message GetOrdersByCustomerRequest {
+  string customer_id = 1;
+}
+message GetOrdersByCustomerResponse {
+  repeated Order orders = 1;
+}
+
+message CreateOrderRequest {
+  string            customer_id = 1;
+  repeated OrderItem items      = 2;
+}
+message CreateOrderResponse {
+  Order order = 1;
+}
+
+message UpdateOrderStatusRequest {
+  string order_id = 1;
+  string status   = 2;
+}
+message UpdateOrderStatusResponse {
+  Order order = 1;
+}
+
+service OrderService {
+  rpc GetOrder            (GetOrderRequest)            returns (GetOrderResponse);
+  rpc GetOrdersByCustomer (GetOrdersByCustomerRequest) returns (GetOrdersByCustomerResponse);
+  rpc CreateOrder         (CreateOrderRequest)         returns (CreateOrderResponse);
+  rpc UpdateOrderStatus   (UpdateOrderStatusRequest)   returns (UpdateOrderStatusResponse);
+}

@@ -1,0 +1,31 @@
+syntax = "proto3";
+package notification;
+
+message Notification {
+  string id         = 1;
+  string type       = 2;
+  string message    = 3;
+  string order_id   = 4;
+  string customer_id = 5;
+  bool   read       = 6;
+  string created_at = 7;
+}
+
+message GetNotificationsRequest {
+  string customer_id = 1;
+}
+message GetNotificationsResponse {
+  repeated Notification notifications = 1;
+}
+
+message MarkReadRequest {
+  string notification_id = 1;
+}
+message MarkReadResponse {
+  bool success = 1;
+}
+
+service NotificationService {
+  rpc GetNotifications (GetNotificationsRequest) returns (GetNotificationsResponse);
+  rpc MarkAsRead       (MarkReadRequest)         returns (MarkReadResponse);
+}
