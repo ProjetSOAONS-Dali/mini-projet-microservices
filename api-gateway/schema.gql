@@ -1,0 +1,59 @@
+type Product {
+  id:          String!
+  name:        String!
+  description: String!
+  price:       Float!
+  stock:       Int!
+  category:    String
+  created_at:  String
+}
+
+type OrderItem {
+  product_id:   String!
+  product_name: String!
+  quantity:     Int!
+  unit_price:   Float!
+}
+
+type Order {
+  id:          String!
+  customer_id: String!
+  items:       [OrderItem!]!
+  total:       Float!
+  status:      String!
+  created_at:  String
+}
+
+type Notification {
+  id:          String!
+  type:        String!
+  message:     String!
+  order_id:    String
+  customer_id: String!
+  read:        Boolean!
+  created_at:  String
+}
+
+input OrderItemInput {
+  product_id:   String!
+  product_name: String!
+  quantity:     Int!
+  unit_price:   Float!
+}
+
+type Query {
+  product(id: String!):                       Product
+  products(query: String, category: String):  [Product]
+  order(id: String!):                         Order
+  ordersByCustomer(customer_id: String!):     [Order]
+  notifications(customer_id: String!):        [Notification]
+}
+
+type Mutation {
+  createProduct(name: String!, description: String!, price: Float!, stock: Int!, category: String): Product
+  updateProduct(id: String!, name: String, description: String, price: Float, stock: Int):          Product
+  deleteProduct(id: String!):                                                                        Boolean
+  createOrder(customer_id: String!, items: [OrderItemInput!]!):                                     Order
+  updateOrderStatus(order_id: String!, status: String!):                                            Order
+  markNotificationAsRead(notification_id: String!):                                                 Boolean
+}

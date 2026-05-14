@@ -1,0 +1,375 @@
+{
+  "info": {
+    "name": "Mini-Projet Microservices E-Commerce",
+    "_postman_id": "microservices-ecommerce-collection",
+    "description": "Collection complète — 25 requêtes REST + GraphQL\nSoA et Microservices — Dr. Salah Gontara — A.U. 2025/2026",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "BASE_URL",        "value": "http://localhost:3000" },
+    { "key": "ORDER_ID",        "value": "" },
+    { "key": "NEW_PRODUCT_ID",  "value": "" },
+    { "key": "GQL_PRODUCT_ID",  "value": "" },
+    { "key": "NOTIF_ID",        "value": "" }
+  ],
+  "item": [
+    {
+      "name": "01 — Products REST",
+      "item": [
+        {
+          "name": "01 — GET tous les produits",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('success=true', () => pm.expect(body.success).to.be.true);",
+            "pm.test('Au moins 5 produits', () => pm.expect(body.data.length).to.be.at.least(5));",
+            "pm.test('Champs requis présents', () => {",
+            "  const p = body.data[0];",
+            "  pm.expect(p).to.have.all.keys('id','name','price','stock');",
+            "});"
+          ], "type": "text/javascript" }}],
+          "request": { "method": "GET", "url": "{{BASE_URL}}/products" }
+        },
+        {
+          "name": "02 — GET produits recherche ?q=Laptop",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('Résultat contient Laptop', () => {",
+            "  pm.expect(body.data.some(p => p.name.toLowerCase().includes('laptop'))).to.be.true;",
+            "});"
+          ], "type": "text/javascript" }}],
+          "request": { "method": "GET", "url": "{{BASE_URL}}/products?q=Laptop" }
+        },
+        {
+          "name": "03 — GET produits filtre ?category=Informatique",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('Tous dans catégorie Informatique', () => {",
+            "  body.data.forEach(p => pm.expect(p.category).to.equal('Informatique'));",
+            "});"
+          ], "type": "text/javascript" }}],
+          "request": { "method": "GET", "url": "{{BASE_URL}}/products?category=Informatique" }
+        },
+        {
+          "name": "04 — GET produit par ID (p1)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('ID correct', () => pm.expect(body.data.id).to.equal('p1'));",
+            "pm.test('Nom Laptop Pro X', () => pm.expect(body.data.name).to.equal('Laptop Pro X'));"
+          ], "type": "text/javascript" }}],
+          "request": { "method": "GET", "url": "{{BASE_URL}}/products/p1" }
+        },
+        {
+          "name": "05 — GET produit inexistant → 404",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 404', () => pm.response.to.have.status(404));",
+            "const body = pm.response.json();",
+            "pm.test('success=false', () => pm.expect(body.success).to.be.false);"
+          ], "type": "text/javascript" }}],
+          "request": { "method": "GET", "url": "{{BASE_URL}}/products/id-inexistant-xyz" }
+        },
+        {
+          "name": "06 — POST créer un produit",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "const body = pm.response.json();",
+            "pm.test('success=true', () => pm.expect(body.success).to.be.true);",
+            "pm.test('ID UUID généré', () => pm.expect(body.data.id).to.be.a('string').and.have.lengthOf(36));",
+            "pm.test('Nom correct', () => pm.expect(body.data.name).to.equal('Drone FPV Pro'));",
+            "pm.collectionVariables.set('NEW_PRODUCT_ID', body.data.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/products",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Drone FPV Pro\",\n  \"description\": \"Drone de course FPV 5 pouces, 4K\",\n  \"price\": 349.99,\n  \"stock\": 10,\n  \"category\": \"Drones\"\n}" }
+          }
+        },
+        {
+          "name": "07 — PUT modifier le produit créé",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('Prix mis à jour', () => pm.expect(body.data.price).to.equal(299.99));",
+            "pm.test('Stock mis à jour', () => pm.expect(body.data.stock).to.equal(15));"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "PUT",
+            "url": "{{BASE_URL}}/products/{{NEW_PRODUCT_ID}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"price\": 299.99,\n  \"stock\": 15\n}" }
+          }
+        },
+        {
+          "name": "08 — DELETE supprimer le produit créé",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('success=true', () => pm.expect(body.success).to.be.true);"
+          ], "type": "text/javascript" }}],
+          "request": { "method": "DELETE", "url": "{{BASE_URL}}/products/{{NEW_PRODUCT_ID}}" }
+        },
+        {
+          "name": "09 — GET produit supprimé → 404",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 404 après suppression', () => pm.response.to.have.status(404));",
+            "const body = pm.response.json();",
+            "pm.test('success=false', () => pm.expect(body.success).to.be.false);"
+          ], "type": "text/javascript" }}],
+          "request": { "method": "GET", "url": "{{BASE_URL}}/products/{{NEW_PRODUCT_ID}}" }
+        }
+      ]
+    },
+    {
+      "name": "02 — Orders REST",
+      "item": [
+        {
+          "name": "10 — POST créer une commande (⚡ Kafka order-created)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "const body = pm.response.json();",
+            "pm.test('success=true', () => pm.expect(body.success).to.be.true);",
+            "pm.test('Statut PENDING', () => pm.expect(body.data.status).to.equal('PENDING'));",
+            "pm.test('Total calculé correctement', () => pm.expect(body.data.total).to.be.above(0));",
+            "pm.test('ID UUID généré', () => pm.expect(body.data.id).to.be.a('string').and.have.lengthOf(36));",
+            "pm.collectionVariables.set('ORDER_ID', body.data.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/orders",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"customer_id\": \"client-001\",\n  \"items\": [\n    {\n      \"product_id\": \"p1\",\n      \"product_name\": \"Laptop Pro X\",\n      \"quantity\": 1,\n      \"unit_price\": 1299.99\n    },\n    {\n      \"product_id\": \"p3\",\n      \"product_name\": \"Casque Audio Z\",\n      \"quantity\": 2,\n      \"unit_price\": 199.99\n    }\n  ]\n}" }
+          }
+        },
+        {
+          "name": "11 — GET commande par ID",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('ID correspond', () => pm.expect(body.data.id).to.equal(pm.collectionVariables.get('ORDER_ID')));",
+            "pm.test('Items présents', () => pm.expect(body.data.items).to.be.an('array').with.lengthOf(2));"
+          ], "type": "text/javascript" }}],
+          "request": { "method": "GET", "url": "{{BASE_URL}}/orders/{{ORDER_ID}}" }
+        },
+        {
+          "name": "12 — GET commandes par client",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('Au moins 1 commande', () => pm.expect(body.data.length).to.be.at.least(1));",
+            "pm.test('Toutes pour client-001', () => {",
+            "  body.data.forEach(o => pm.expect(o.customer_id).to.equal('client-001'));",
+            "});"
+          ], "type": "text/javascript" }}],
+          "request": { "method": "GET", "url": "{{BASE_URL}}/customers/client-001/orders" }
+        },
+        {
+          "name": "13 — PATCH statut → CONFIRMED (⚡ Kafka order-updated)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('Statut CONFIRMED', () => pm.expect(body.data.status).to.equal('CONFIRMED'));"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "PATCH",
+            "url": "{{BASE_URL}}/orders/{{ORDER_ID}}/status",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"status\": \"CONFIRMED\" }" }
+          }
+        },
+        {
+          "name": "14 — PATCH statut → SHIPPED (⚡ Kafka order-updated)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('Statut SHIPPED', () => pm.expect(body.data.status).to.equal('SHIPPED'));"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "PATCH",
+            "url": "{{BASE_URL}}/orders/{{ORDER_ID}}/status",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"status\": \"SHIPPED\" }" }
+          }
+        },
+        {
+          "name": "15 — PATCH statut invalide → 500",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 500 pour statut invalide', () => pm.response.to.have.status(500));",
+            "const body = pm.response.json();",
+            "pm.test('success=false', () => pm.expect(body.success).to.be.false);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "PATCH",
+            "url": "{{BASE_URL}}/orders/{{ORDER_ID}}/status",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"status\": \"STATUT_INVALIDE\" }" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 — Notifications REST",
+      "item": [
+        {
+          "name": "16 — GET notifications client-001 (créées par Kafka)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('Au moins 3 notifications', () => pm.expect(body.data.length).to.be.at.least(3));",
+            "pm.test('Champs requis présents', () => {",
+            "  const n = body.data[0];",
+            "  pm.expect(n).to.have.all.keys('id','type','message','read','created_at');",
+            "});",
+            "pm.collectionVariables.set('NOTIF_ID', body.data[0].id);"
+          ], "type": "text/javascript" }}],
+          "request": { "method": "GET", "url": "{{BASE_URL}}/notifications/client-001" }
+        },
+        {
+          "name": "17 — PATCH marquer notification comme lue",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('success=true', () => pm.expect(body.success).to.be.true);",
+            "pm.test('read=true retourné', () => pm.expect(body.read).to.be.true);"
+          ], "type": "text/javascript" }}],
+          "request": { "method": "PATCH", "url": "{{BASE_URL}}/notifications/{{NOTIF_ID}}/read" }
+        },
+        {
+          "name": "18 — GET notifications — vérifier read=true",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "const notifId = pm.collectionVariables.get('NOTIF_ID');",
+            "const notif = body.data.find(n => n.id === notifId);",
+            "pm.test('Notification marquée read=true', () => pm.expect(notif.read).to.be.true);"
+          ], "type": "text/javascript" }}],
+          "request": { "method": "GET", "url": "{{BASE_URL}}/notifications/client-001" }
+        }
+      ]
+    },
+    {
+      "name": "04 — GraphQL Queries",
+      "item": [
+        {
+          "name": "19 — GQL Query tous les produits",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('Pas d erreur GraphQL', () => pm.expect(body.errors).to.be.undefined);",
+            "pm.test('Au moins 5 produits', () => pm.expect(body.data.products.length).to.be.at.least(5));"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/graphql",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"query\": \"{ products { id name price stock category } }\" }" }
+          }
+        },
+        {
+          "name": "20 — GQL Query produit par ID (p1)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('Pas d erreur GraphQL', () => pm.expect(body.errors).to.be.undefined);",
+            "pm.test('ID p1 correct', () => pm.expect(body.data.product.id).to.equal('p1'));",
+            "pm.test('Nom Laptop Pro X', () => pm.expect(body.data.product.name).to.equal('Laptop Pro X'));"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/graphql",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"query\": \"{ product(id: \\\"p1\\\") { id name description price stock } }\" }" }
+          }
+        },
+        {
+          "name": "21 — GQL Query commande par ID",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('Pas d erreur GraphQL', () => pm.expect(body.errors).to.be.undefined);",
+            "pm.test('Commande présente', () => pm.expect(body.data.order).to.not.be.null);",
+            "pm.test('Items présents', () => pm.expect(body.data.order.items.length).to.be.at.least(1));"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/graphql",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"query\": \"{ order(id: \\\"{{ORDER_ID}}\\\") { id status total items { product_name quantity unit_price } } }\" }" }
+          }
+        },
+        {
+          "name": "22 — GQL Query notifications client-001",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('Pas d erreur GraphQL', () => pm.expect(body.errors).to.be.undefined);",
+            "pm.test('Notifications présentes', () => pm.expect(body.data.notifications.length).to.be.at.least(1));"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/graphql",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"query\": \"{ notifications(customer_id: \\\"client-001\\\") { id type message read created_at } }\" }" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 — GraphQL Mutations",
+      "item": [
+        {
+          "name": "23 — GQL Mutation créer produit",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('Pas d erreur GraphQL', () => pm.expect(body.errors).to.be.undefined);",
+            "pm.test('Produit créé avec ID', () => pm.expect(body.data.createProduct.id).to.be.a('string'));",
+            "pm.test('Prix correct', () => pm.expect(body.data.createProduct.price).to.equal(349.99));",
+            "pm.collectionVariables.set('GQL_PRODUCT_ID', body.data.createProduct.id);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/graphql",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"query\": \"mutation { createProduct(name: \\\"Drone FPV\\\", description: \\\"Course FPV\\\", price: 349.99, stock: 10, category: \\\"Drones\\\") { id name price } }\" }" }
+          }
+        },
+        {
+          "name": "24 — GQL Mutation créer commande (⚡ Kafka)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('Pas d erreur GraphQL', () => pm.expect(body.errors).to.be.undefined);",
+            "pm.test('Commande créée', () => pm.expect(body.data.createOrder.id).to.be.a('string'));",
+            "pm.test('Statut PENDING', () => pm.expect(body.data.createOrder.status).to.equal('PENDING'));",
+            "pm.test('Total > 0', () => pm.expect(body.data.createOrder.total).to.be.above(0));"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/graphql",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"query\": \"mutation { createOrder(customer_id: \\\"client-002\\\", items: [{ product_id: \\\"p4\\\", product_name: \\\"Tablette Z10\\\", quantity: 1, unit_price: 399.99 }]) { id status total } }\" }" }
+          }
+        },
+        {
+          "name": "25 — GQL Mutation supprimer produit",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const body = pm.response.json();",
+            "pm.test('Pas d erreur GraphQL', () => pm.expect(body.errors).to.be.undefined);",
+            "pm.test('deleteProduct=true', () => pm.expect(body.data.deleteProduct).to.be.true);"
+          ], "type": "text/javascript" }}],
+          "request": {
+            "method": "POST",
+            "url": "{{BASE_URL}}/graphql",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"query\": \"mutation { deleteProduct(id: \\\"{{GQL_PRODUCT_ID}}\\\") }\" }" }
+          }
+        }
+      ]
+    }
+  ]
+}
