@@ -1,126 +1,182 @@
-# 🛒 Marketplace E-Commerce — Architecture Microservices
+#  Marketplace E-Commerce — Architecture Microservices
 
-> Mini-Projet SoA et Microservices | Dr. Salah Gontara | A.U. 2025/2026
+> **Mini-Projet — SoA et Microservices | Dr. Salah Gontara | A.U. 2025/2026**
 
-## Description
+---
 
-Application e-commerce complète basée sur une architecture microservices Node.js
-avec communication gRPC, API REST + GraphQL, messaging asynchrone Kafka,
-bases de données SQLite3 (SQL) et RxDB (NoSQL).
+## 📌 Présentation
 
-## Architecture
+Plateforme e-commerce basée sur une architecture microservices complète avec :
+- **3 microservices** communiquant via **gRPC / Protobuf**
+- **API Gateway** exposant une API **REST** et **GraphQL (Apollo)**
+- **Apache Kafka** pour la communication asynchrone entre services
+- **SQLite3** (SQL) et **RxDB** (NoSQL) comme bases de données
+
+---
+
+##  Architecture
 
 ```
-Client ──REST/GraphQL──► API Gateway :3000
-                              │ gRPC
-               ┌──────────────┼──────────────┐
-               ▼              ▼              ▼
-          Product          Order        Notification
-          Service          Service       Service
-          :50051           :50052         :50053
-          SQLite3          SQLite3        RxDB
-                             │  Kafka       ▲
-                             └──────────────┘
-                           order-created
-                           order-updated
+Client (Postman / Navigateur)
+          │
+          ▼  HTTP 1.1  REST + GraphQL
+┌─────────────────────────────────┐
+│          API GATEWAY            │  ← PORT 3000
+│    Express.js  +  Apollo        │
+│  REST /products  /orders  ...   │
+│  GraphQL  POST /graphql         │
+└──────────────┬──────────────────┘
+               │ gRPC / HTTP2 + Protobuf
+       ┌───────┼───────────┐
+       │       │           │
+       ▼       ▼           ▼
+ ┌──────────┐ ┌──────────┐ ┌──────────────────┐
+ │ Product  │ │  Order   │ │  Notification    │
+ │ Service  │ │ Service  │ │    Service       │
+ │  :50051  │ │  :50052  │ │     :50053       │
+ │ SQLite3  │ │ SQLite3  │ │  RxDB (NoSQL)    │
+ └──────────┘ └────┬─────┘ └────────┬─────────┘
+                   │                │
+                   │   KAFKA BROKER :9092
+                   │   ┌─────────────────┐
+                   └──►│  order-created  │──►┘
+                       │  order-updated  │
+                       └─────────────────┘
 ```
 
-## Stack technique
+---
 
-| Composant               | Technologie                    |
-|-------------------------|--------------------------------|
-| Runtime                 | Node.js 20                     |
-| Communication synchrone | gRPC (HTTP/2 + Protobuf)       |
-| API Client              | REST (Express.js) + GraphQL (Apollo) |
-| Messaging asynchrone    | Apache Kafka 4.2 (KRaft)       |
-| Base SQL                | SQLite3 (better-sqlite3)       |
-| Base NoSQL              | RxDB (in-memory)               |
+## Structure du projet
 
-## Microservices
+```
+mini-projet-microservices/
+├── proto/
+│   ├── product.proto          # Contrat gRPC ProductService
+│   ├── order.proto            # Contrat gRPC OrderService
+│   └── notification.proto     # Contrat gRPC NotificationService
+├── product-service/
+│   ├── index.js               # Serveur gRPC + logique métier
+│   ├── db.js                  # SQLite3 + seed
+│   └── package.json
+├── order-service/
+│   ├── index.js               # Serveur gRPC + logique métier
+│   ├── db.js                  # SQLite3
+│   ├── kafkaProducer.js       # Publication Kafka
+│   └── package.json
+├── notification-service/
+│   ├── index.js               # Serveur gRPC
+│   ├── db.js                  # RxDB (NoSQL, mémoire)
+│   ├── kafkaConsumer.js       # Consommation Kafka
+│   └── package.json
+├── api-gateway/
+│   ├── index.js               # Express + REST + GraphQL
+│   ├── resolvers.js           # Résolveurs GraphQL
+│   ├── schema.gql             # Schéma GraphQL
+│   └── package.json
+├                     
+├── postman/
+│   └── collection.json        # Collection Postman complète
+└── README.md
+```
 
-| Service             | Port  | Base   | Méthodes gRPC                                                              |
-|---------------------|-------|--------|----------------------------------------------------------------------------|
-| ProductService      | 50051 | SQLite3 | GetProduct, SearchProducts, CreateProduct, UpdateProduct, DeleteProduct   |
-| OrderService        | 50052 | SQLite3 | GetOrder, GetOrdersByCustomer, CreateOrder, UpdateOrderStatus             |
-| NotificationService | 50053 | RxDB   | GetNotifications, MarkAsRead                                               |
+---
 
-## Installation
+##  Installation et démarrage
+
+### Prérequis
+
+| Outil | Version | Vérification |
+|---|---|---|
+| Node.js | 20 LTS | `node -v` |
+| Java | 17+ | `java -version` |
+| npm | 10+ | `npm -v` |
+
+### 1. Cloner le projet
 
 ```bash
-git clone https://github.com/VOTRE_USERNAME/mini-projet-microservices.git
+git clone https://github.com/ProjetSOAONS-Dali/mini-projet-microservices.git
 cd mini-projet-microservices
+```
 
-# Installer les dépendances de chaque service
-cd product-service      && npm install && cd ..
-cd order-service        && npm install && cd ..
-cd notification-service && npm install && cd ..
-cd api-gateway          && npm install && cd ..
 
-# Initialiser Kafka KRaft (1 seule fois)
+### 2. Initialiser Kafka (une seule fois)
+
+```bash
 KAFKA_CLUSTER_ID="$(kafka/bin/kafka-storage.sh random-uuid)"
 kafka/bin/kafka-storage.sh format --standalone \
-  -t "$KAFKA_CLUSTER_ID" -c kafka/config/server.properties
+  -t "$KAFKA_CLUSTER_ID" \
+  -c kafka/config/server.properties
+```
 
-# Créer les topics Kafka
+### 3. Démarrer les services (5 terminaux)
+
+```bash
+# Terminal 1 — Kafka
+kafka/bin/kafka-server-start.sh kafka/config/server.properties
+
+# Terminal 2 — Créer les topics (après démarrage Kafka)
 kafka/bin/kafka-topics.sh --create --partitions 3 --replication-factor 1 \
   --topic order-created --bootstrap-server localhost:9092
 kafka/bin/kafka-topics.sh --create --partitions 3 --replication-factor 1 \
   --topic order-updated --bootstrap-server localhost:9092
-```
 
-## Démarrage (5 terminaux)
-
-```bash
-# T1 — Kafka Broker
-kafka/bin/kafka-server-start.sh kafka/config/server.properties
-
-# T2 — ProductService (port 50051)
+# Terminal 3 — ProductService
 cd product-service && node index.js
 
-# T3 — OrderService (port 50052)
+# Terminal 4 — OrderService
 cd order-service && node index.js
 
-# T4 — NotificationService (port 50053)
+# Terminal 5 — NotificationService
 cd notification-service && node index.js
 
-# T5 — API Gateway (port 3000)
+# Terminal 6 — API Gateway
 cd api-gateway && node index.js
 ```
 
-## Tests Postman
+### 4. Vérifier le démarrage
 
-Importer `postman/Microservices_Ecommerce.postman_collection.json` dans Postman.
-
-25 requêtes avec assertions automatiques — Run Collection → tous verts ✅
-
-| Dossier                | Requêtes | Description                              |
-|------------------------|----------|------------------------------------------|
-| 01 — Products REST     | 9        | CRUD complet + cas d'erreur 404          |
-| 02 — Orders REST       | 6        | Création, lecture, changements de statut |
-| 03 — Notifications REST| 3        | Lecture auto Kafka + mark as read        |
-| 04 — GraphQL Queries   | 4        | products, product, order, notifications  |
-| 05 — GraphQL Mutations | 3        | createProduct, createOrder, deleteProduct|
-
-## Flux Kafka (démo rapide)
-
-```bash
-# 1. Créer une commande → Kafka publie order-created → notification auto
-curl -s -X POST http://localhost:3000/orders \
-  -H "Content-Type: application/json" \
-  -d '{"customer_id":"demo","items":[{"product_id":"p1","product_name":"Laptop Pro X","quantity":1,"unit_price":1299.99}]}'
-
-# 2. Confirmer → Kafka publie order-updated → 2e notification
-curl -s -X PATCH http://localhost:3000/orders/ORDER_ID/status \
-  -H "Content-Type: application/json" \
-  -d '{"status":"CONFIRMED"}'
-
-# 3. Voir les notifications créées automatiquement
-curl -s http://localhost:3000/notifications/demo
+```
+✅ ProductService gRPC démarré sur le port 50051
+✅ OrderService gRPC démarré sur le port 50052
+✅ NotificationService gRPC démarré sur le port 50053
+🚀 API Gateway démarrée sur http://localhost:3000
+✅ GraphQL disponible sur http://localhost:3000/graphql
 ```
 
-## Documentation
+---
 
-- [Architecture](docs/ARCHITECTURE.md)
-- [API REST](docs/API_REST.md)
-- [GraphQL](docs/GRAPHQL.md)
-- [Kafka Topics](docs/kafka-topics.md)
+##  Endpoints disponibles
+
+| Type | Méthode | URL | Description |
+|---|---|---|---|
+| REST | GET | `/products` | Liste / recherche de produits |
+| REST | GET | `/products/:id` | Produit par ID |
+| REST | POST | `/products` | Créer un produit |
+| REST | PUT | `/products/:id` | Modifier un produit |
+| REST | DELETE | `/products/:id` | Supprimer un produit |
+| REST | GET | `/orders/:id` | Commande par ID |
+| REST | POST | `/orders` | Créer une commande |
+| REST | PATCH | `/orders/:id/status` | Modifier le statut |
+| REST | GET | `/customers/:id/orders` | Commandes d'un client |
+| REST | GET | `/notifications/:customerId` | Notifications |
+| REST | PATCH | `/notifications/:id/read` | Marquer comme lue |
+| GraphQL | POST | `/graphql` | Toutes les queries/mutations |
+
+---
+
+##  Tests
+
+Importer `postman/collection.json` dans Postman et exécuter la collection complète (25 requêtes REST + GraphQL + gRPC).
+
+---
+
+##  Technologies
+
+| Couche | Technologie |
+|---|---|
+| Transport inter-services | gRPC + Protobuf |
+| API externe | REST (Express.js) + GraphQL (Apollo Server) |
+| Messagerie async | Apache Kafka 4.2 (KRaft) |
+| Base de données SQL | SQLite3 (better-sqlite3) |
+| Base de données NoSQL | RxDB (stockage mémoire) |
+| Runtime | Node.js 20 LTS |
