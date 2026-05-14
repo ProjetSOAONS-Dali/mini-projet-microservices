@@ -1,7 +1,6 @@
-// api-gateway/resolvers.js
-const grpc        = require('@grpc/grpc-js');
+const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
-const path        = require('path');
+const path = require('path');
 
 const load = (file) => {
   const def = protoLoader.loadSync(
@@ -25,6 +24,8 @@ const rpc = (client, method, req) =>
   new Promise((res, rej) =>
     client[method](req, (err, r) => (err ? rej(err) : res(r)))
   );
+
+// ── Resolvers GraphQL ─────────────────────────────────────────────────────────
 
 const resolvers = {
   Query: {

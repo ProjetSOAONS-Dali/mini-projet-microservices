@@ -1,4 +1,6 @@
-// notification-service/db.js
+const { createRxDatabase } = require('rxdb');
+const { getRxStorageMemory } = require('rxdb/plugins/storage-memory');
+
 // RxDB : base de données NoSQL réactive (in-memory pour Node.js)
 let dbInstance = null;
 
@@ -35,7 +37,7 @@ const getDB = async () => {
     },
   });
 
-  console.log('✅ RxDB NotificationService initialisée (NoSQL in-memory)');
+  console.log('RxDB NotificationService initialisée (NoSQL in-memory)');
   return dbInstance;
 };
 
