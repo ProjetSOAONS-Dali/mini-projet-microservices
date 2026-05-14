@@ -38,7 +38,7 @@
             "  pm.expect(p).to.have.property('category');",
             "});",
             "if (body.length > 0) pm.collectionVariables.set('PRODUCT_ID', body[0].id);",
-            "console.log('✅ Products count:', body.length);"
+            "console.log(' Products count:', body.length);"
           ]}}],
           "request": {
             "method": "GET",
