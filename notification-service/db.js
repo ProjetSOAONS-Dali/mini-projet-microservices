@@ -1,44 +1,107 @@
-const { createRxDatabase } = require('rxdb');
-const { getRxStorageMemory } = require('rxdb/plugins/storage-memory');
+const { createRxDatabase, addRxPlugin } = require('rxdb');
 
-// RxDB : base de données NoSQL réactive (in-memory pour Node.js)
+const {
+  getRxStorageMemory
+} = require('rxdb/plugins/storage-memory');
+
+const {
+  RxDBDevModePlugin
+} = require('rxdb/plugins/dev-mode');
+
+addRxPlugin(RxDBDevModePlugin);
+
+const notificationSchema = {
+  version: 0,
+
+  primaryKey: 'id',
+
+  type: 'object',
+
+  properties: {
+
+    id: {
+      type: 'string',
+      maxLength: 100,
+    },
+
+    type: {
+      type: 'string',
+    },
+
+    message: {
+      type: 'string',
+    },
+
+    order_id: {
+      type: 'string',
+    },
+
+    customer_id: {
+      type: 'string',
+      maxLength: 100,
+    },
+
+    read: {
+      type: 'boolean',
+      default: false,
+    },
+
+    created_at: {
+      type: 'string',
+    },
+  },
+
+  required: [
+    'id',
+    'type',
+    'message',
+    'customer_id',
+  ],
+};
+
 let dbInstance = null;
 
-const getDB = async () => {
-  if (dbInstance) return dbInstance;
+const initDB = async () => {
 
-  const { createRxDatabase } = await import('rxdb');
-  const { getRxStorageMemory } = await import('rxdb/plugins/storage-memory');
+  if (dbInstance) {
+    return dbInstance;
+  }
+
+  console.log('⏳ Initialisation RxDB...');
 
   dbInstance = await createRxDatabase({
-    name:            'notifications_db',
-    storage:         getRxStorageMemory(),
+
+    name: 'notifdb',
+
+    storage: getRxStorageMemory(),
+
+    multiInstance: false,
+
     ignoreDuplicate: true,
   });
 
   await dbInstance.addCollections({
+
     notifications: {
-      schema: {
-        version:    0,
-        primaryKey: 'id',
-        type:       'object',
-        properties: {
-          id:          { type: 'string', maxLength: 100 },
-          type:        { type: 'string' },
-          message:     { type: 'string' },
-          order_id:    { type: 'string' },
-          customer_id: { type: 'string', maxLength: 100 },
-          read:        { type: 'boolean' },
-          created_at:  { type: 'string' },
-        },
-        required: ['id', 'type', 'message', 'customer_id'],
-        indexes:  ['customer_id'],
-      },
+      schema: notificationSchema,
     },
   });
 
-  console.log('RxDB NotificationService initialisée (NoSQL in-memory)');
+  console.log('✅ RxDB initialisée');
+
   return dbInstance;
 };
 
-module.exports = { getDB };
+const getDB = async () => {
+
+  if (!dbInstance) {
+    throw new Error('DB non initialisée');
+  }
+
+  return dbInstance;
+};
+
+module.exports = {
+  initDB,
+  getDB,
+};
