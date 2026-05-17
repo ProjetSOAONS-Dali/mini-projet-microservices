@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShopFlow — Marketplace Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   DESIGN SYSTEM — ShopFlow
+   Aesthetic: Industrial Precision — dark neutrals, electric accents
+   ══════════════════════════════════════════════════════════════════ */
+:root {
+  --bg:       #0D0F12;
+  --bg2:      #141720;
+  --bg3:      #1C2030;
+  --bg4:      #242840;
+  --border:   #2A2E42;
+  --border2:  #353A55;
+  --text:     #E8EAF0;
+  --text2:    #9096B0;
+  --text3:    #5C6080;
+  --accent:   #4F7EFF;
+  --accent2:  #3A66FF;
+  --green:    #2DD98F;
+  --green-bg: rgba(45,217,143,.12);
+  --amber:    #F5A623;
+  --amber-bg: rgba(245,166,35,.12);
+  --red:      #FF5757;
+  --red-bg:   rgba(255,87,87,.12);
+  --purple:   #A78BFA;
+  --purple-bg:rgba(167,139,250,.12);
+  --cyan:     #22D3EE;
+  --cyan-bg:  rgba(34,211,238,.12);
+  --r:        10px;
+  --r2:       6px;
+  --shadow:   0 4px 24px rgba(0,0,0,.4);
+  --font:     'DM Sans', sans-serif;
+  --mono:     'DM Mono', monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── scrollbar ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* ── layout ── */
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+
+/* ══ SIDEBAR ══════════════════════════════════════════════════════ */
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+.logo-mark{display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.logo-text{font-size:16px;font-weight:600;letter-spacing:-.3px}
+.logo-sub{font-size:11px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
+
+.sidebar-section{padding:16px 12px 8px;font-size:10px;font-weight:600;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--r2);cursor:pointer;font-size:14px;font-weight:400;color:var(--text2);transition:all .15s;margin:1px 8px;position:relative}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:rgba(79,126,255,.12);color:var(--accent)}
+.nav-item .icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-notif-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+
+.sidebar-footer{margin-top:auto;padding:16px;border-top:1px solid var(--border)}
+.customer-select{width:100%}
+.customer-select label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px}
+.customer-select select{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;padding:7px 10px;border-radius:var(--r2);cursor:pointer;outline:none}
+.customer-select select:focus{border-color:var(--accent)}
+
+.sse-status{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;color:var(--text3)}
+.sse-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
+.sse-dot.connected{background:var(--green);box-shadow:0 0 6px var(--green)}
+.sse-dot.connecting{background:var(--amber);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ══ MAIN ══════════════════════════════════════════════════════════ */
+.main{display:flex;flex-direction:column;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:10}
+.topbar-title{font-size:18px;font-weight:500}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.search-input{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:13px;padding:7px 14px;border-radius:20px;outline:none;width:200px;transition:all .2s}
+.search-input::placeholder{color:var(--text3)}
+.search-input:focus{border-color:var(--accent);width:240px}
+
+.content{padding:24px 28px;flex:1;overflow-y:auto}
+
+/* ══ CARDS / UI ═══════════════════════════════════════════════════ */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.card-sm{padding:14px 16px}
+
+/* ── stats row ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s}
+.stat-card:hover{border-color:var(--border2)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r) var(--r) 0 0}
+.stat-card.blue::before{background:var(--accent)}
+.stat-card.green::before{background:var(--green)}
+.stat-card.amber::before{background:var(--amber)}
+.stat-card.purple::before{background:var(--purple)}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.stat-value{font-size:26px;font-weight:600;letter-spacing:-1px;line-height:1}
+.stat-sub{font-size:12px;color:var(--text3);margin-top:6px}
+.stat-icon{position:absolute;right:18px;top:18px;font-size:22px;opacity:.3}
+
+/* ── section header ── */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.section-title{font-size:15px;font-weight:500}
+.section-actions{display:flex;gap:8px}
+
+/* ── btn ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r2);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--bg3);color:var(--text)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid rgba(255,87,87,.2)}
+.btn-danger:hover{background:rgba(255,87,87,.2)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+
+/* ── table ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{border-bottom:1px solid var(--border2)}
+th{text-align:left;padding:10px 14px;font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:background .1s}
+tbody tr:hover td{background:var(--bg3);color:var(--text)}
+.td-code{font-family:var(--mono);font-size:12px;color:var(--text3)}
+
+/* ── badge ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:500;letter-spacing:.2px}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-amber{background:var(--amber-bg);color:var(--amber)}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-blue{background:rgba(79,126,255,.12);color:var(--accent)}
+.badge-purple{background:var(--purple-bg);color:var(--purple)}
+.badge-cyan{background:var(--cyan-bg);color:var(--cyan)}
+.badge-gray{background:var(--bg4);color:var(--text3)}
+
+/* ── modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:24px;width:480px;max-width:90vw;transform:translateY(20px) scale(.97);transition:transform .2s;max-height:80vh;overflow-y:auto}
+.modal-overlay.open .modal{transform:none}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:16px;font-weight:500}
+.modal-close{background:var(--bg3);border:none;color:var(--text2);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:var(--bg4);color:var(--text)}
+
+/* ── form ── */
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;display:block;letter-spacing:.2px}
+.form-input,.form-select{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;padding:9px 12px;border-radius:var(--r2);outline:none;transition:border-color .2s}
+.form-input:focus,.form-select:focus{border-color:var(--accent)}
+.form-input::placeholder{color:var(--text3)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── cart items ── */
+.cart-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border-radius:var(--r2);margin-bottom:8px}
+.cart-item-name{flex:1;font-size:13px}
+.cart-item-qty{width:50px;text-align:center}
+.cart-item-price{font-size:13px;color:var(--text2);width:80px;text-align:right}
+.cart-total{display:flex;justify-content:space-between;align-items:center;padding:12px 10px;border-top:1px solid var(--border);margin-top:8px;font-size:14px;font-weight:500}
+
+/* ══ NOTIFICATIONS PANEL ══════════════════════════════════════════ */
+.notif-panel{position:fixed;right:24px;top:80px;width:340px;z-index:50;pointer-events:none}
+.notif-panel-inner{pointer-events:all}
+
+/* toast notifications */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:200;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.toast{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;width:320px;display:flex;align-items:flex-start;gap:10px;box-shadow:var(--shadow);animation:slideIn .3s ease;font-size:13px}
+.toast.removing{animation:slideOut .25s ease forwards}
+.toast-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.toast-body{flex:1}
+.toast-title{font-weight:500;color:var(--text);margin-bottom:2px;font-size:13px}
+.toast-msg{color:var(--text2);font-size:12px;line-height:1.4}
+.toast-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:0;flex-shrink:0}
+.toast.green{border-left:3px solid var(--green)}
+.toast.blue{border-left:3px solid var(--accent)}
+.toast.amber{border-left:3px solid var(--amber)}
+.toast.red{border-left:3px solid var(--red)}
+@keyframes slideIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
+@keyframes slideOut{to{transform:translateX(110%);opacity:0}}
+
+/* live notif list */
+.notif-list-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.notif-list-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.notif-list-title{font-size:14px;font-weight:500;display:flex;align-items:center;gap:8px}
+.unread-count{background:var(--red);color:#fff;font-size:11px;font-weight:600;padding:1px 7px;border-radius:10px}
+.notif-list-body{max-height:400px;overflow-y:auto}
+.notif-item{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;position:relative}
+.notif-item:last-child{border-bottom:none}
+.notif-item:hover{background:var(--bg3)}
+.notif-item.unread::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:0 2px 2px 0}
+.notif-item-icon{font-size:18px;flex-shrink:0;width:28px;text-align:center;margin-top:1px}
+.notif-item-body{flex:1;min-width:0}
+.notif-item-msg{font-size:12px;color:var(--text);line-height:1.4;margin-bottom:3px}
+.notif-item.unread .notif-item-msg{color:var(--text);font-weight:500}
+.notif-item-time{font-size:11px;color:var(--text3)}
+.notif-item-type{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:500;letter-spacing:.3px}
+.notif-new-flash{animation:flash .5s ease}
+@keyframes flash{0%,100%{background:transparent}50%{background:rgba(79,126,255,.15)}}
+
+/* empty state */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty-icon{font-size:36px;margin-bottom:10px;opacity:.4}
+.empty-text{font-size:13px;line-height:1.5}
+
+/* ── page tabs ── */
+.page{display:none}
+.page.active{display:block}
+
+/* ── product card grid ── */
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.product-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;transition:all .2s;position:relative}
+.product-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--shadow)}
+.product-cat{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:8px}
+.product-name{font-size:14px;font-weight:500;margin-bottom:4px;line-height:1.3}
+.product-desc{font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.4;min-height:32px}
+.product-footer{display:flex;align-items:center;justify-content:space-between}
+.product-price{font-size:18px;font-weight:600;letter-spacing:-.5px;color:var(--text)}
+.product-stock{font-size:11px;color:var(--text3)}
+.product-actions{display:flex;gap:6px;margin-top:10px}
+
+/* ── order status colors ── */
+.s-PENDING   {background:var(--amber-bg);color:var(--amber)}
+.s-CONFIRMED {background:rgba(79,126,255,.12);color:var(--accent)}
+.s-SHIPPED   {background:var(--cyan-bg);color:var(--cyan)}
+.s-DELIVERED {background:var(--green-bg);color:var(--green)}
+.s-CANCELLED {background:var(--red-bg);color:var(--red)}
+
+/* ── loading spinner ── */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row td{text-align:center;padding:24px;color:var(--text3)}
+
+/* ── tabs ── */
+.view-tabs{display:flex;gap:2px;background:var(--bg3);padding:3px;border-radius:8px;margin-bottom:20px;width:fit-content}
+.view-tab{padding:6px 14px;font-size:13px;border-radius:6px;cursor:pointer;border:none;background:transparent;color:var(--text3);font-family:var(--font);transition:all .15s}
+.view-tab.active{background:var(--bg2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+
+/* ── dashboard charts ── */
+.chart-bar{display:flex;align-items:flex-end;gap:6px;height:80px}
+.bar{flex:1;background:rgba(79,126,255,.3);border-radius:3px 3px 0 0;position:relative;min-height:4px;transition:background .2s}
+.bar:hover{background:rgba(79,126,255,.6)}
+.bar-label{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--text3);white-space:nowrap}
+
+/* responsive */
+@media(max-width:768px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .notif-panel{width:90vw;right:5vw}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">🛒</div>
+        <div>
+          <div class="logo-text">ShopFlow</div>
+          <div class="logo-sub">Microservices</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">Navigation</div>
+    <nav>
+      <div class="nav-item active" onclick="navigate('dashboard', this)">
+        <span class="icon">⬡</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="navigate('products', this)">
+        <span class="icon">📦</span> Produits
+      </div>
+      <div class="nav-item" onclick="navigate('orders', this)">
+        <span class="icon">🧾</span> Commandes
+      </div>
+      <div class="nav-item" id="nav-notif" onclick="navigate('notifications', this)">
+        <span class="icon">🔔</span> Notifications
+        <span class="nav-notif-badge" id="notif-badge" style="display:none">0</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="customer-select">
+        <label>Client actif</label>
+        <select id="customer-select" onchange="changeCustomer()">
+          <option value="client-001">client-001</option>
+          <option value="client-002">client-002</option>
+          <option value="client-003">client-003</option>
+        </select>
+      </div>
+      <div class="sse-status">
+        <div class="sse-dot connecting" id="sse-dot"></div>
+        <span id="sse-label">Connexion SSE...</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════════ MAIN ══════════════════ -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-right">
+        <input class="search-input" placeholder="🔍 Rechercher un produit..." id="search-input" oninput="onSearch()">
+        <button class="btn btn-primary btn-sm" onclick="openOrderModal()">+ Nouvelle commande</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card blue">
+            <div class="stat-icon">📦</div>
+            <div class="stat-label">Produits</div>
+            <div class="stat-value" id="stat-products">—</div>
+            <div class="stat-sub">en catalogue</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">🧾</div>
+            <div class="stat-label">Commandes</div>
+            <div class="stat-value" id="stat-orders">—</div>
+            <div class="stat-sub">pour ce client</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-icon">🔔</div>
+            <div class="stat-label">Notifications</div>
+            <div class="stat-value" id="stat-notifs">—</div>
+            <div class="stat-sub">reçues</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-icon">📡</div>
+            <div class="stat-label">SSE</div>
+            <div class="stat-value" id="stat-sse">OFF</div>
+            <div class="stat-sub">temps réel</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="card">
+            <div class="section-head">
+              <span class="section-title">Dernières commandes</span>
+              <button class="btn btn-ghost btn-sm" onclick="navigate('orders', document.querySelector('[onclick*=orders]'))">Voir tout</button>
+            </div>
+            <div id="dash-orders-list">
+              <div class="empty-state"><div class="empty-icon">🧾</div><div class="empty-text">Chargement...</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-head">
+              <span class="section-title">Activité Kafka (live)</span>
+              <span id="kafka-status" class="badge badge-gray">En attente</span>
+            </div>
+            <div id="kafka-feed" style="max-height:300px;overflow-y:auto">
+              <div class="empty-state"><div class="empty-icon">⚡</div><div class="empty-text">Les événements Kafka apparaîtront ici</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PRODUCTS ── -->
+      <div class="page" id="page-products">
+        <div class="section-head">
+          <span class="section-title">Catalogue Produits <span id="products-count" style="color:var(--text3);font-weight:400;font-size:13px"></span></span>
+          <div class="section-actions">
+            <div class="view-tabs">
+              <button class="view-tab active" onclick="setView('grid',this)">Grille</button>
+              <button class="view-tab" onclick="setView('list',this)">Liste</button>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openProductModal()">+ Ajouter</button>
+          </div>
+        </div>
+        <div id="products-grid" class="products-grid"></div>
+        <div id="products-table-wrap" style="display:none" class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Nom</th><th>Catégorie</th><th>Prix</th><th>Stock</th><th>Actions</th></tr></thead>
+              <tbody id="products-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ORDERS ── -->
+      <div class="page" id="page-orders">
+        <div class="section-head">
+          <span class="section-title">Commandes <span style="color:var(--text3);font-weight:400;font-size:13px" id="orders-count"></span></span>
+          <button class="btn btn-primary btn-sm" onclick="openOrderModal()">+ Nouvelle commande</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>Total</th><th>Articles</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
+              <tbody id="orders-table-body">
+                <tr class="loading-row"><td colspan="6"><div class="spinner"></div> Chargement...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── NOTIFICATIONS ── -->
+      <div class="page" id="page-notifications">
+        <div class="section-head">
+          <span class="section-title">Notifications <span id="notifs-count" style="color:var(--text3);font-weight:400;font-size:13px"></span></span>
+          <button class="btn btn-ghost btn-sm" onclick="markAllRead()">Tout marquer comme lu</button>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <div id="notif-full-list"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ══════════════ TOAST CONTAINER ══════════════ -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ══════════════ MODAL — Créer Produit ══════════════ -->
+<div class="modal-overlay" id="modal-product">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="modal-product-title">Ajouter un produit</span>
+      <button class="modal-close" onclick="closeModal('modal-product')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nom *</label>
+        <input class="form-input" id="p-name" placeholder="Ex: Laptop Pro">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Catégorie</label>
+        <input class="form-input" id="p-category" placeholder="Ex: Informatique">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description *</label>
+      <input class="form-input" id="p-description" placeholder="Décrivez le produit...">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Prix (DT) *</label>
+        <input class="form-input" id="p-price" type="number" step="0.01" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Stock *</label>
+        <input class="form-input" id="p-stock" type="number" placeholder="0">
+      </div>
+    </div>
+    <input type="hidden" id="p-id">
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-product')">Annuler</button>
+      <button class="btn btn-primary" id="btn-save-product" onclick="saveProduct()">Créer le produit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL — Créer Commande ══════════════ -->
+<div class="modal-overlay" id="modal-order">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Nouvelle commande ⚡ Kafka</span>
+      <button class="modal-close" onclick="closeModal('modal-order')">✕</button>
+    </div>
+    <div style="background:rgba(79,126,255,.08);border:1px solid rgba(79,126,255,.2);border-radius:6px;padding:10px 12px;margin-bottom:16px;font-size:12px;color:var(--accent)">
+      ⚡ Cette commande publiera un événement sur <strong>Kafka topic: order-created</strong> et une notification sera reçue en temps réel.
+    </div>
+    <div class="form-group">
+      <label class="form-label">Choisir un produit à ajouter</label>
+      <div style="display:flex;gap:8px">
+        <select class="form-select" id="order-product-select" style="flex:1"></select>
+        <button class="btn btn-ghost btn-sm" onclick="addToCart()">+ Ajouter</button>
+      </div>
+    </div>
+    <div id="cart-items" style="margin-bottom:12px"></div>
+    <div class="cart-total" id="cart-total" style="display:none">
+      <span>Total</span><span id="cart-total-value" style="font-size:18px;color:var(--accent)">0.00 DT</span>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-order')">Annuler</button>
+      <button class="btn btn-primary" id="btn-place-order" onclick="placeOrder()" disabled>Passer la commande</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL — Statut Commande ══════════════ -->
+<div class="modal-overlay" id="modal-status">
+  <div class="modal" style="width:360px">
+    <div class="modal-head">
+      <span class="modal-title">Changer le statut ⚡ Kafka</span>
+      <button class="modal-close" onclick="closeModal('modal-status')">✕</button>
+    </div>
+    <div style="background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);border-radius:6px;padding:10px 12px;margin-bottom:16px;font-size:12px;color:var(--amber)">
+      ⚡ Publiera un événement sur <strong>Kafka topic: order-updated</strong>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Commande</label>
+      <input class="form-input" id="status-order-id" readonly style="font-family:var(--mono);font-size:12px">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nouveau statut</label>
+      <select class="form-select" id="new-status">
+        <option value="CONFIRMED">✅ CONFIRMED — Confirmée</option>
+        <option value="SHIPPED">🚚 SHIPPED — Expédiée</option>
+        <option value="DELIVERED">🎉 DELIVERED — Livrée</option>
+        <option value="CANCELLED">❌ CANCELLED — Annulée</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-status')">Annuler</button>
+      <button class="btn btn-primary" onclick="updateStatus()">Confirmer ⚡</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════════
+const API = 'http://localhost:3000';
+let customerId  = 'client-001';
+let sseSource   = null;
+let products    = [];
+let orders      = [];
+let notifications = [];
+let cart        = [];
+let unreadCount = 0;
+let currentView = 'grid';
+let searchQuery = '';
+
+// ═══════════════════════════════════════════════════════════════════
+// SSE — NOTIFICATIONS TEMPS RÉEL
+// ═══════════════════════════════════════════════════════════════════
+function connectSSE() {
+  if (sseSource) sseSource.close();
+
+  const dot   = document.getElementById('sse-dot');
+  const label = document.getElementById('sse-label');
+  dot.className   = 'sse-dot connecting';
+  label.textContent = 'Connexion SSE...';
+
+  sseSource = new EventSource(`${API}/events/${customerId}`);
+
+  sseSource.onopen = () => {
+    dot.className   = 'sse-dot connected';
+    label.textContent = 'Temps réel actif';
+    document.getElementById('stat-sse').textContent = 'ON';
+    addKafkaFeed('SSE', `Connecté pour ${customerId}`, 'blue');
+  };
+
+  sseSource.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+
+    if (data.type === 'CONNECTED') {
+      toast('🔌 SSE Connecté', `Notifications temps réel actives pour ${customerId}`, 'blue');
+      return;
+    }
+
+    if (data.type === 'NOTIFICATION') {
+      const n = data.notification;
+      // Ajouter à la liste locale
+      if (!notifications.find(x => x.id === n.id)) {
+        notifications.unshift(n);
+        updateUnreadCount();
+        renderNotifications();
+        renderDashboard();
+        // Toast temps réel
+        const icon = n.type === 'ORDER_CREATED' ? '🔔' : '📦';
+        const color = n.type === 'ORDER_CREATED' ? 'green' : 'blue';
+        toast(icon + ' Nouvelle notification', n.message, color);
+        // Feed Kafka
+        addKafkaFeed(n.type, n.message, color);
+        // Flash badge
+        flashBadge();
+      }
+    }
+  };
+
+  sseSource.onerror = () => {
+    dot.className   = 'sse-dot connecting';
+    label.textContent = 'SSE — reconnexion...';
+    document.getElementById('stat-sse').textContent = 'ERR';
+  };
+}
+
+function addKafkaFeed(type, message, color = 'blue') {
+  const feed = document.getElementById('kafka-feed');
+  const emptyEl = feed.querySelector('.empty-state');
+  if (emptyEl) emptyEl.remove();
+
+  document.getElementById('kafka-status').className = 'badge badge-' + color;
+  document.getElementById('kafka-status').textContent = '⚡ Actif';
+
+  const now  = new Date().toLocaleTimeString('fr-FR');
+  const item = document.createElement('div');
+  item.style.cssText = 'display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;';
+  item.innerHTML = `
+    <span style="color:var(--text3);font-family:var(--mono);flex-shrink:0">${now}</span>
+    <span class="badge badge-${color}" style="flex-shrink:0;font-size:10px">${type}</span>
+    <span style="color:var(--text2);line-height:1.4">${message}</span>`;
+  feed.insertBefore(item, feed.firstChild);
+
+  // Max 20 entrées
+  while (feed.children.length > 20) feed.removeChild(feed.lastChild);
+}
+
+function flashBadge() {
+  const badge = document.getElementById('notif-badge');
+  badge.style.transform = 'scale(1.3)';
+  setTimeout(() => badge.style.transform = '', 200);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// API CALLS
+// ═══════════════════════════════════════════════════════════════════
+async function fetchProducts() {
+  try {
+    const r = await fetch(`${API}/products`);
+    const d = await r.json();
+    products = d.data || [];
+    document.getElementById('stat-products').textContent = products.length;
+    renderProducts();
+    populateProductSelect();
+  } catch(e) { toast('❌ Erreur', 'ProductService inaccessible', 'red'); }
+}
+
+async function fetchOrders() {
+  try {
+    const r = await fetch(`${API}/customers/${customerId}/orders`);
+    const d = await r.json();
+    orders = d.data || [];
+    document.getElementById('stat-orders').textContent = orders.length;
+    document.getElementById('orders-count').textContent = `(${orders.length})`;
+    renderOrders();
+    renderDashOrders();
+  } catch(e) { toast('❌ Erreur', 'OrderService inaccessible', 'red'); }
+}
+
+async function fetchNotifications() {
+  try {
+    const r = await fetch(`${API}/notifications/${customerId}`);
+    const d = await r.json();
+    notifications = d.data || [];
+    updateUnreadCount();
+    renderNotifications();
+    renderDashboard();
+  } catch(e) {}
+}
+
+async function createProduct(data) {
+  const r = await fetch(`${API}/products`, {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+  });
+  return r.json();
+}
+
+async function updateProduct(id, data) {
+  const r = await fetch(`${API}/products/${id}`, {
+    method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+  });
+  return r.json();
+}
+
+async function deleteProduct(id) {
+  const r = await fetch(`${API}/products/${id}`, { method: 'DELETE' });
+  return r.json();
+}
+
+async function createOrder(data) {
+  const r = await fetch(`${API}/orders`, {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+  });
+  return r.json();
+}
+
+async function updateOrderStatus(orderId, status) {
+  const r = await fetch(`${API}/orders/${orderId}/status`, {
+    method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status })
+  });
+  return r.json();
+}
+
+async function markNotifRead(id) {
+  await fetch(`${API}/notifications/${id}/read`, { method: 'PATCH' });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════════
+function renderProducts() {
+  const filtered = searchQuery
+    ? products.filter(p => p.name.toLowerCase().includes(searchQuery) || (p.category||'').toLowerCase().includes(searchQuery))
+    : products;
+  document.getElementById('products-count').textContent = `(${filtered.length})`;
+
+  // Grid view
+  const grid = document.getElementById('products-grid');
+  grid.innerHTML = '';
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">📦</div><div class="empty-text">Aucun produit trouvé</div></div>';
+    return;
+  }
+  filtered.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'product-card';
+    div.innerHTML = `
+      <div class="product-cat">${p.category || '—'}</div>
+      <div class="product-name">${p.name}</div>
+      <div class="product-desc">${p.description || ''}</div>
+      <div class="product-footer">
+        <div class="product-price">${(+p.price).toFixed(2)} DT</div>
+        <div class="product-stock">${p.stock} en stock</div>
+      </div>
+      <div class="product-actions">
+        <button class="btn btn-ghost btn-xs" style="flex:1" onclick="editProduct('${p.id}')">✏️ Modifier</button>
+        <button class="btn btn-danger btn-xs" onclick="confirmDelete('${p.id}','${p.name}')">🗑</button>
+      </div>`;
+    grid.appendChild(div);
+  });
+
+  // Table view
+  const tbody = document.getElementById('products-table-body');
+  tbody.innerHTML = filtered.map(p => `
+    <tr>
+      <td class="td-code">${p.id}</td>
+      <td style="font-weight:500;color:var(--text)">${p.name}</td>
+      <td><span class="badge badge-gray">${p.category||'—'}</span></td>
+      <td style="font-weight:500">${(+p.price).toFixed(2)} DT</td>
+      <td>${p.stock}</td>
+      <td>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-xs" onclick="editProduct('${p.id}')">✏️</button>
+          <button class="btn btn-danger btn-xs" onclick="confirmDelete('${p.id}','${p.name}')">🗑</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function renderOrders() {
+  const tbody = document.getElementById('orders-table-body');
+  if (!orders.length) {
+    tbody.innerHTML = '<tr class="loading-row"><td colspan="6"><div class="empty-icon">🧾</div><br>Aucune commande</td></tr>';
+    return;
+  }
+  tbody.innerHTML = orders.map(o => {
+    const items = Array.isArray(o.items) ? o.items : [];
+    const itemSummary = items.length > 0
+      ? `${items[0].product_name}${items.length > 1 ? ` +${items.length-1}` : ''}`
+      : '—';
+    const dt = o.created_at ? new Date(o.created_at).toLocaleDateString('fr-FR') : '—';
+    return `
+      <tr>
+        <td class="td-code">${o.id?.slice(0,8)}...</td>
+        <td style="font-weight:500">${(+o.total).toFixed(2)} DT</td>
+        <td style="font-size:12px;color:var(--text2)">${itemSummary}</td>
+        <td><span class="badge s-${o.status}">${o.status}</span></td>
+        <td style="color:var(--text3);font-size:12px">${dt}</td>
+        <td>
+          ${o.status !== 'DELIVERED' && o.status !== 'CANCELLED'
+            ? `<button class="btn btn-ghost btn-xs" onclick="openStatusModal('${o.id}')">⚡ Statut</button>`
+            : `<span style="color:var(--text3);font-size:12px">Terminée</span>`}
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function renderDashOrders() {
+  const el = document.getElementById('dash-orders-list');
+  const slice = orders.slice(0, 5);
+  if (!slice.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🧾</div><div class="empty-text">Aucune commande</div></div>';
+    return;
+  }
+  el.innerHTML = slice.map(o => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${(+o.total).toFixed(2)} DT</div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">${o.id?.slice(0,12)}...</div>
+      </div>
+      <span class="badge s-${o.status}" style="font-size:10px">${o.status}</span>
+    </div>`).join('');
+}
+
+function renderNotifications() {
+  const list   = document.getElementById('notif-full-list');
+  document.getElementById('notifs-count').textContent = `(${notifications.length})`;
+  document.getElementById('stat-notifs').textContent  = notifications.length;
+
+  if (!notifications.length) {
+    list.innerHTML = `<div class="empty-state" style="padding:60px"><div class="empty-icon">🔔</div><div class="empty-text">Aucune notification pour ${customerId}<br>Passez une commande pour tester le flux Kafka !</div></div>`;
+    return;
+  }
+
+  list.innerHTML = notifications.map(n => {
+    const icon = n.type === 'ORDER_CREATED' ? '✅' : n.type === 'ORDER_UPDATED' ? '📦' : '🔔';
+    const dt   = n.created_at ? new Date(n.created_at).toLocaleString('fr-FR') : '';
+    return `
+      <div class="notif-item ${n.read ? '' : 'unread'} notif-new-flash" id="notif-${n.id}" onclick="readNotif('${n.id}')">
+        <div class="notif-item-icon">${icon}</div>
+        <div class="notif-item-body">
+          <div class="notif-item-msg">${n.message}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <span class="notif-item-time">${dt}</span>
+            <span class="notif-item-type badge ${n.type === 'ORDER_CREATED' ? 'badge-green' : 'badge-blue'}">${n.type}</span>
+            ${n.read ? '<span style="font-size:10px;color:var(--text3)">Lu ✓</span>' : '<span style="font-size:10px;color:var(--accent)">Non lu</span>'}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderDashboard() {
+  document.getElementById('stat-notifs').textContent = notifications.length;
+}
+
+function updateUnreadCount() {
+  unreadCount = notifications.filter(n => !n.read).length;
+  const badge = document.getElementById('notif-badge');
+  if (unreadCount > 0) {
+    badge.textContent = unreadCount;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function populateProductSelect() {
+  const sel = document.getElementById('order-product-select');
+  sel.innerHTML = products.map(p =>
+    `<option value="${p.id}" data-price="${p.price}" data-name="${p.name}">${p.name} — ${(+p.price).toFixed(2)} DT</option>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════════════════
+function openProductModal(productId) {
+  if (productId) {
+    editProduct(productId);
+  } else {
+    document.getElementById('modal-product-title').textContent = 'Ajouter un produit';
+    document.getElementById('btn-save-product').textContent = 'Créer le produit';
+    document.getElementById('p-id').value = '';
+    ['p-name','p-category','p-description','p-price','p-stock'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    openModal('modal-product');
+  }
+}
+
+function editProduct(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('modal-product-title').textContent = 'Modifier le produit';
+  document.getElementById('btn-save-product').textContent = 'Sauvegarder';
+  document.getElementById('p-id').value = id;
+  document.getElementById('p-name').value = p.name;
+  document.getElementById('p-category').value = p.category||'';
+  document.getElementById('p-description').value = p.description||'';
+  document.getElementById('p-price').value = p.price;
+  document.getElementById('p-stock').value = p.stock;
+  openModal('modal-product');
+}
+
+async function saveProduct() {
+  const id   = document.getElementById('p-id').value;
+  const data = {
+    name:        document.getElementById('p-name').value.trim(),
+    description: document.getElementById('p-description').value.trim(),
+    price:       parseFloat(document.getElementById('p-price').value),
+    stock:       parseInt(document.getElementById('p-stock').value),
+    category:    document.getElementById('p-category').value.trim(),
+  };
+  if (!data.name || !data.price) return toast('⚠️ Champs requis', 'Nom et prix sont obligatoires', 'amber');
+
+  const btn = document.getElementById('btn-save-product');
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+
+  try {
+    const r = id ? await updateProduct(id, data) : await createProduct(data);
+    if (r.success) {
+      closeModal('modal-product');
+      toast(id ? '✅ Produit modifié' : '✅ Produit créé', r.data.name, 'green');
+      await fetchProducts();
+    } else toast('❌ Erreur', r.error, 'red');
+  } catch(e) { toast('❌ Erreur réseau', e.message, 'red'); }
+
+  btn.innerHTML = id ? 'Sauvegarder' : 'Créer le produit';
+  btn.disabled = false;
+}
+
+function confirmDelete(id, name) {
+  if (confirm(`Supprimer "${name}" ?`)) delProduct(id);
+}
+
+async function delProduct(id) {
+  try {
+    const r = await deleteProduct(id);
+    if (r.success) {
+      toast('🗑 Produit supprimé', '', 'amber');
+      await fetchProducts();
+    } else toast('❌ Erreur', r.error, 'red');
+  } catch(e) { toast('❌ Erreur réseau', e.message, 'red'); }
+}
+
+// ── Order Modal ──
+function openOrderModal() {
+  cart = [];
+  renderCart();
+  openModal('modal-order');
+}
+
+function addToCart() {
+  const sel = document.getElementById('order-product-select');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt) return;
+  const id    = opt.value;
+  const existing = cart.find(c => c.product_id === id);
+  if (existing) {
+    existing.quantity++;
+  } else {
+    cart.push({ product_id: id, product_name: opt.dataset.name, unit_price: parseFloat(opt.dataset.price), quantity: 1 });
+  }
+  renderCart();
+}
+
+function renderCart() {
+  const el    = document.getElementById('cart-items');
+  const total = document.getElementById('cart-total');
+  const btn   = document.getElementById('btn-place-order');
+
+  if (!cart.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:20px"><div class="empty-text">Aucun article — choisissez un produit ci-dessus</div></div>';
+    total.style.display = 'none';
+    btn.disabled = true;
+    return;
+  }
+
+  el.innerHTML = cart.map((c, i) => `
+    <div class="cart-item">
+      <span class="cart-item-name">${c.product_name}</span>
+      <div style="display:flex;align-items:center;gap:4px">
+        <button onclick="changeQty(${i},-1)" style="background:var(--bg4);border:none;color:var(--text);width:22px;height:22px;border-radius:4px;cursor:pointer">−</button>
+        <span class="cart-item-qty">${c.quantity}</span>
+        <button onclick="changeQty(${i},1)" style="background:var(--bg4);border:none;color:var(--text);width:22px;height:22px;border-radius:4px;cursor:pointer">+</button>
+      </div>
+      <span class="cart-item-price">${(c.unit_price * c.quantity).toFixed(2)} DT</span>
+      <button onclick="removeFromCart(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px">✕</button>
+    </div>`).join('');
+
+  const tot = cart.reduce((s, c) => s + c.unit_price * c.quantity, 0);
+  document.getElementById('cart-total-value').textContent = tot.toFixed(2) + ' DT';
+  total.style.display = 'flex';
+  btn.disabled = false;
+}
+
+function changeQty(i, d) {
+  cart[i].quantity = Math.max(1, cart[i].quantity + d);
+  renderCart();
+}
+function removeFromCart(i) { cart.splice(i, 1); renderCart(); }
+
+async function placeOrder() {
+  if (!cart.length) return;
+  const btn = document.getElementById('btn-place-order');
+  btn.innerHTML = '<span class="spinner"></span> En cours...';
+  btn.disabled  = true;
+
+  try {
+    const r = await createOrder({ customer_id: customerId, items: cart });
+    if (r.success) {
+      closeModal('modal-order');
+      toast('🧾 Commande créée !', `Total: ${r.data.total.toFixed(2)} DT — ⚡ Kafka notifiera dans 2s...`, 'green');
+      addKafkaFeed('ORDER_CREATED', `Commande ${r.data.id.slice(0,8)}... publiée sur order-created`, 'green');
+      await fetchOrders();
+    } else toast('❌ Erreur', r.error, 'red');
+  } catch(e) { toast('❌ Erreur réseau', e.message, 'red'); }
+
+  btn.innerHTML = 'Passer la commande';
+  btn.disabled  = false;
+}
+
+// ── Status Modal ──
+function openStatusModal(orderId) {
+  document.getElementById('status-order-id').value = orderId;
+  openModal('modal-status');
+}
+
+async function updateStatus() {
+  const orderId = document.getElementById('status-order-id').value;
+  const status  = document.getElementById('new-status').value;
+  try {
+    const r = await updateOrderStatus(orderId, status);
+    if (r.success) {
+      closeModal('modal-status');
+      toast(`⚡ Statut → ${status}`, `Commande mise à jour — Kafka publiera order-updated`, 'amber');
+      addKafkaFeed('ORDER_UPDATED', `${orderId.slice(0,8)}... → ${status} publié sur order-updated`, 'amber');
+      await fetchOrders();
+    } else toast('❌ Erreur', r.error, 'red');
+  } catch(e) { toast('❌ Erreur réseau', e.message, 'red'); }
+}
+
+async function readNotif(id) {
+  const n = notifications.find(x => x.id === id);
+  if (!n || n.read) return;
+  n.read = true;
+  updateUnreadCount();
+  renderNotifications();
+  await markNotifRead(id);
+}
+
+async function markAllRead() {
+  for (const n of notifications.filter(x => !x.read)) {
+    n.read = true;
+    await markNotifRead(n.id);
+  }
+  updateUnreadCount();
+  renderNotifications();
+  toast('✅ Tout lu', 'Toutes les notifications marquées comme lues', 'green');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// NAVIGATION & UI HELPERS
+// ═══════════════════════════════════════════════════════════════════
+function navigate(pageId, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+pageId).classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = {dashboard:'Dashboard',products:'Produits',orders:'Commandes',notifications:'Notifications'};
+  document.getElementById('page-title').textContent = titles[pageId] || pageId;
+  // Refresh data
+  if (pageId === 'orders') fetchOrders();
+  if (pageId === 'notifications') fetchNotifications();
+  if (pageId === 'products') fetchProducts();
+}
+
+function changeCustomer() {
+  customerId = document.getElementById('customer-select').value;
+  notifications = [];
+  orders = [];
+  connectSSE();
+  fetchOrders();
+  fetchNotifications();
+  toast('👤 Client changé', `Maintenant connecté en tant que ${customerId}`, 'blue');
+}
+
+function onSearch() {
+  searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+  renderProducts();
+}
+
+function setView(view, btn) {
+  currentView = view;
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('products-grid').style.display = view === 'grid' ? 'grid' : 'none';
+  document.getElementById('products-table-wrap').style.display = view === 'list' ? 'block' : 'none';
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Click outside to close
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════════
+function toast(title, message, color = 'blue') {
+  const icons = { green:'✅', blue:'ℹ️', amber:'⚠️', red:'❌' };
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${color}`;
+  el.innerHTML = `
+    <div class="toast-icon">${icons[color]||'🔔'}</div>
+    <div class="toast-body">
+      <div class="toast-title">${title}</div>
+      ${message ? `<div class="toast-msg">${message}</div>` : ''}
+    </div>
+    <button class="toast-close" onclick="removeToast(this.closest('.toast'))">✕</button>`;
+  container.appendChild(el);
+  setTimeout(() => removeToast(el), 5000);
+}
+
+function removeToast(el) {
+  if (!el || !el.parentNode) return;
+  el.classList.add('removing');
+  setTimeout(() => el.remove(), 260);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+async function init() {
+  await fetchProducts();
+  await fetchOrders();
+  await fetchNotifications();
+  connectSSE();
+  renderDashOrders();
+
+  // Auto-refresh notifications every 10s (fallback si SSE fail)
+  setInterval(async () => {
+    await fetchNotifications();
+  }, 10000);
+}
+
+init();
+</script>
+</body>
+</html>
